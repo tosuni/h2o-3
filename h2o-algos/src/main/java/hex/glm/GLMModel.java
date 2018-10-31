@@ -721,10 +721,20 @@ public class GLMModel extends Model<GLMModel,GLMModel.GLMParameters,GLMModel.GLM
     public GLMWeights computeWeights(double y, double eta, double off, double w, GLMWeights x) {
       double etaOff = eta + off;
       x.mu = linkInv(etaOff);
-      double var = variance(x.mu);//Math.max(1e-5, variance(x.mu)); // avoid numerical problems with 0 variance
+      double var = variance(x.mu);
       double d = linkDeriv(x.mu);
       x.w = w / (var * d * d);
       x.z = eta + (y - x.mu) * d;
+      likelihoodAndDeviance(y,x,w);
+      return x;
+    }
+
+    public GLMWeights computeWeightsCOD(double y, double eta, double off, double w, GLMWeights x) {
+      double etaOff = eta + off;
+      x.mu = linkInv(etaOff); // prob estimated response = 1
+      double temp = x.mu*(1-x.mu);
+      x.z = w*(y-x.mu);
+      x.w = w*(temp < 1e-6?1e-6:temp);
       likelihoodAndDeviance(y,x,w);
       return x;
     }
